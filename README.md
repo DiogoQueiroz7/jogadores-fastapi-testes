@@ -1,4 +1,4 @@
-# jogadores-fastapi-jwt
+# jogadores-fastapi-testes
 
 Atividade da matéria do professor Rogério, onde fiz uma API usando FastAPI para cadastrar jogadores do Palmeiras.
 
@@ -14,9 +14,9 @@ Precisa ter Python instalado.
 
 Abra o terminal na pasta onde quer baixar o projeto e execute os passos:
 
-1. Clonar: git clone https://github.com/DiogoQueiroz7/jogadores-fastapi-jwt.git
+1. Clonar: git clone https://github.com/DiogoQueiroz7/jogadores-fastapi-testes.git
 
-2. Entrar na pasta: cd jogadores-fastapi-jwt
+2. Entrar na pasta: cd jogadores-fastapi-testes
 
 3. Criar o ambiente virtual: python -m venv .venv
 
@@ -43,6 +43,14 @@ Primeiro, teste o GET /jogadores/. se o banco estiver vazio, ele retorna uma lis
 Clique em Authorize e coloque o email que cadastrou no campo username. digite a senha no campo password, clique em Authorize e depois em close
 
 Tente cadastrar o jogador de novo. agora a API deve retornar 200 com os dados do jogador
+
+## Como rodar os testes
+
+Com a venv ativa, as tabelas criadas e a chave do JWT definida, rode no mesmo terminal:
+
+python -m pytest test_jogadores.py -v
+
+Se a API estiver rodando nesse terminal, pare com Ctrl+C antes. O resultado esperado é 5 passed.
 
 ## Rotas
 
