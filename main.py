@@ -19,7 +19,10 @@ class JogadorSaida(JogadorEntrada):
 
     model_config = ConfigDict(from_attributes=True)
 
-app = FastAPI()
+app = FastAPI(
+    title="Jogadores do Palmeiras",
+    description="API para consultar e cadastrar jogadores do Palmeiras"
+)
 
 CHAVE_JWT = os.environ["CHAVE_JWT"]
 oauth2 = OAuth2PasswordBearer(tokenUrl="token")
@@ -35,8 +38,9 @@ def verificar_token(token: str = Depends(oauth2)):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido ou vencido", headers={"WWW-Authenticate": "Bearer"})
 
-@app.post("/token")
+@app.post("/token", tags=["Login"], summary="Fazer login")
 def login(formulario: OAuth2PasswordRequestForm = Depends(), banco: Session = Depends(get_db)):
+    """use o email no campo username e a senha pra receber um token que vale por 30 minutos"""
     email = formulario.username.strip().lower()
     usuario = banco.query(Usuario).filter_by(email=email).first()
 
@@ -53,30 +57,34 @@ def login(formulario: OAuth2PasswordRequestForm = Depends(), banco: Session = De
 
     return {"access_token": token, "token_type": "bearer"}
 
-@app.get("/jogadores/")
+@app.get("/jogadores/", tags=["Jogadores"], summary="Listar jogadores")
 def listar_jogadores(posicao: str | None = None, banco: Session = Depends(get_db)) -> list[JogadorSaida]:
+    """lista o elenco todo ou filtra pela posicao"""
     consulta = banco.query(Jogador)
     if posicao is None:
         return consulta.all()
     return consulta.filter(func.lower(Jogador.posicao) == posicao.lower()).all()
 
-@app.get("/jogadores/{jogador_id}")
+@app.get("/jogadores/{jogador_id}", tags=["Jogadores"], summary="Buscar jogador por ID")
 def ver_jogador(jogador_id: int, banco: Session = Depends(get_db)) -> JogadorSaida | None:
+    """busca pelo ID e retorna null se o jogador nao existir"""
     j = banco.get(Jogador, jogador_id)
     if j is not None:
         return j
     return None
 
-@app.post("/jogadores/", dependencies=[Depends(verificar_token)])
+@app.post("/jogadores/", tags=["Jogadores"], dependencies=[Depends(verificar_token)], summary="Cadastrar jogador")
 def criar_jogador(jogador: JogadorEntrada, banco: Session = Depends(get_db)) -> JogadorSaida:
+    """adiciona um jogador ao elenco com nome e posição"""
     novo = Jogador(nome=jogador.nome, posicao=jogador.posicao.lower())
     banco.add(novo)
     banco.commit()
     banco.refresh(novo)
     return novo
 
-@app.put("/jogadores/{jogador_id}", dependencies=[Depends(verificar_token)])
+@app.put("/jogadores/{jogador_id}", tags=["Jogadores"], dependencies=[Depends(verificar_token)], summary="Editar jogador")
 def atualizar_jogador(jogador_id: int, jogador: JogadorEntrada, banco: Session = Depends(get_db)) -> JogadorSaida | None:
+    """atualiza o nome e a posicao do jogador pelo ID"""
     j = banco.get(Jogador, jogador_id)
     if j is not None:
         j.nome = jogador.nome
@@ -86,8 +94,9 @@ def atualizar_jogador(jogador_id: int, jogador: JogadorEntrada, banco: Session =
         return j
     return None
 
-@app.delete("/jogadores/{jogador_id}", dependencies=[Depends(verificar_token)])
+@app.delete("/jogadores/{jogador_id}", tags=["Jogadores"], dependencies=[Depends(verificar_token)], summary="Excluir jogador")
 def remover_jogador(jogador_id: int, banco: Session = Depends(get_db)) -> JogadorSaida | None:
+    """remove o jogador do elenco pelo ID"""
     j = banco.get(Jogador, jogador_id)
     if j is not None:
         banco.delete(j)
