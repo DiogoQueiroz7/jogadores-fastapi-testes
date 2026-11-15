@@ -3,3 +3,5 @@ sqlalchemy
 alembic
 passlib
 PyJWT
+pytest
+httpx
