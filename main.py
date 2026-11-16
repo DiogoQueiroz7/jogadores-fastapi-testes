@@ -38,7 +38,7 @@ def verificar_token(token: str = Depends(oauth2)):
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Token inválido ou vencido", headers={"WWW-Authenticate": "Bearer"})
 
-@app.post("/token", tags=["Login"], summary="Fazer login")
+@app.post("/token", tags=["Login"], responses={401: {"description": "email ou senha incorretos"}}, summary="Fazer login")
 def login(formulario: OAuth2PasswordRequestForm = Depends(), banco: Session = Depends(get_db)):
     """use o email no campo username e a senha pra receber um token que vale por 30 minutos"""
     email = formulario.username.strip().lower()
@@ -73,7 +73,7 @@ def ver_jogador(jogador_id: int, banco: Session = Depends(get_db)) -> JogadorSai
         return j
     return None
 
-@app.post("/jogadores/", tags=["Jogadores"], dependencies=[Depends(verificar_token)], summary="Cadastrar jogador")
+@app.post("/jogadores/", tags=["Jogadores"], dependencies=[Depends(verificar_token)], responses={401: {"description": "faltou o token ou ele não é válido"}}, summary="Cadastrar jogador")
 def criar_jogador(jogador: JogadorEntrada, banco: Session = Depends(get_db)) -> JogadorSaida:
     """adiciona um jogador ao elenco com nome e posição"""
     novo = Jogador(nome=jogador.nome, posicao=jogador.posicao.lower())
@@ -82,7 +82,7 @@ def criar_jogador(jogador: JogadorEntrada, banco: Session = Depends(get_db)) -> 
     banco.refresh(novo)
     return novo
 
-@app.put("/jogadores/{jogador_id}", tags=["Jogadores"], dependencies=[Depends(verificar_token)], summary="Editar jogador")
+@app.put("/jogadores/{jogador_id}", tags=["Jogadores"], dependencies=[Depends(verificar_token)], responses={401: {"description": "faltou o token ou ele não é válido"}}, summary="Editar jogador")
 def atualizar_jogador(jogador_id: int, jogador: JogadorEntrada, banco: Session = Depends(get_db)) -> JogadorSaida | None:
     """atualiza o nome e a posicao do jogador pelo ID"""
     j = banco.get(Jogador, jogador_id)
@@ -94,7 +94,7 @@ def atualizar_jogador(jogador_id: int, jogador: JogadorEntrada, banco: Session =
         return j
     return None
 
-@app.delete("/jogadores/{jogador_id}", tags=["Jogadores"], dependencies=[Depends(verificar_token)], summary="Excluir jogador")
+@app.delete("/jogadores/{jogador_id}", tags=["Jogadores"], dependencies=[Depends(verificar_token)], responses={401: {"description": "faltou o token ou ele não é válido"}}, summary="Excluir jogador")
 def remover_jogador(jogador_id: int, banco: Session = Depends(get_db)) -> JogadorSaida | None:
     """remove o jogador do elenco pelo ID"""
     j = banco.get(Jogador, jogador_id)
